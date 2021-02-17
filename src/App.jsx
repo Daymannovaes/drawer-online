@@ -5,10 +5,16 @@ import Drawer from './components/drawer';
 
 function App() {
   const [selectedTool, selectTool] = useState();
+
+  const handleSelectTool = (tool) => selectTool(() => tool);
+  const handleChangeColor = (color) => {
+    selectedTool.strokeColor = color;
+  };
+
   return (
     <div className="App">
-      <Tools onSelectTool={selectTool} />
-      <Drawer tool={selectedTool} />
+      <Tools onSelectTool={handleSelectTool} onChangeColor={handleChangeColor} />
+      <Drawer Tool={selectedTool} />
     </div>
   );
 }
