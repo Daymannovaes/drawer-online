@@ -1,4 +1,9 @@
+/* eslint-disable max-classes-per-file */
 // @todo abstract all generic methods to outside the class
+
+function isTouchEvent(event) {
+  return event.type.includes('touch');
+}
 class FreeDrawingTool {
   constructor(canvas, context) {
     this.canvas = canvas;
@@ -8,32 +13,34 @@ class FreeDrawingTool {
   handleDrawer() {
     const { canvas } = this;
 
-    canvas.addEventListener('mousemove', this.mouseMove.bind(this));
-    canvas.addEventListener('mousedown', this.mouseDown.bind(this));
-    canvas.addEventListener('mouseup', this.mouseUp.bind(this));
-    canvas.addEventListener('mouseout', this.mouseOut.bind(this));
+    canvas.addEventListener('mousemove', this.draw.bind(this));
+    canvas.addEventListener('mousedown', this.startDrawing.bind(this));
+    canvas.addEventListener('mouseup', this.endDrawing.bind(this));
+    canvas.addEventListener('mouseout', this.endDrawing.bind(this));
+
+    canvas.addEventListener('touchmove', this.draw.bind(this));
+    canvas.addEventListener('touchstart', this.startDrawing.bind(this));
+    canvas.addEventListener('touchend', this.endDrawing.bind(this));
+    canvas.addEventListener('touchcancel', this.endDrawing.bind(this));
   }
 
-  mouseDown(event) {
+  startDrawing(event) {
     this.drawing = true;
+
     this.context.moveTo(
       this.getRelativeMousePosition(event, 'x'),
       this.getRelativeMousePosition(event, 'y'),
     );
+
     return event;
   }
 
-  mouseUp(event) {
+  endDrawing(event) {
     this.drawing = false;
     return event;
   }
 
-  mouseOut(event) {
-    this.drawing = false;
-    return event;
-  }
-
-  mouseMove(event) {
+  draw(event) {
     if (!this.drawing) return;
 
     const { context } = this;
@@ -56,12 +63,24 @@ class FreeDrawingTool {
   }
 
   getRelativeMousePosition(event, axis) {
-    const axisMap = {
-      x: ['clientX', 'offsetLeft'],
-      y: ['clientY', 'offsetTop'],
+    const offsetMap = {
+      x: 'offsetLeft',
+      y: 'offsetTop',
+    };
+    const mouseMap = {
+      x: 'clientX',
+      y: 'clientY',
+    };
+    const touchMap = {
+      x: 'pageX',
+      y: 'pageY',
     };
 
-    return event[axisMap[axis][0]] - this.canvas[axisMap[axis][1]];
+    const position = isTouchEvent(event)
+      ? event.touches[0][touchMap[axis]]
+      : event[mouseMap[axis]];
+
+    return position - this.canvas[offsetMap[axis]];
   }
 
   static get name() {
@@ -73,4 +92,18 @@ class FreeDrawingTool {
   }
 }
 
-export default [FreeDrawingTool];
+class PoligonalDrawingTool {
+  static get disabled() {
+    return true;
+  }
+
+  static get name() {
+    return 'poligonal-draw';
+  }
+
+  get name() {
+    return this.constructor.name;
+  }
+}
+
+export default [FreeDrawingTool, PoligonalDrawingTool];
